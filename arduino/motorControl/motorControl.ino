@@ -4,61 +4,75 @@
 
 #include <AFMotor.h>
 
-// Motor 1 is left motor 
-// Motor 2 is right motor
+#define delay_val 100
 
-AF_DCMotor motor1(1);
-AF_DCMotor motor2(2);
+AF_DCMotor left(4);
+AF_DCMotor right(3);
 
 void setup() {
-  Serial.begin(9600);           // set up Serial library at 9600 bps
-  Serial.println("Motor test!");
+  
+  
+  Serial.begin(115200);           // set up Serial library at 9600 bps
+  Serial.println("Startup \n");
 
   // turn on motor
-  motor1.setSpeed(200);
-  motor2.setSpeed(200);
+  left.setSpeed(255);
+  right.setSpeed(255);
  
-  motor1.run(RELEASE);
-  motor2.run(RELEASE);
+  left.run(RELEASE);
+  right.run(RELEASE);
 }
 
+int received_char;
+
 void loop() {
-  uint8_t i;
-  
-  Serial.print("forward\n");
-  
-  motor1.run(FORWARD);
-  motor2.run(FORWARD);
-  for (i=0; i<255; i++) {
-    motor1.setSpeed(i);  
-    motor2.setSpeed(i);  
-    delay(10);
- }
- 
-  for (i=255; i!=0; i--) {
-    motor1.setSpeed(i);  
-    motor2.setSpeed(i);  
-    delay(10);
- }
-  
-  Serial.print("reverse \n");
 
-  motor1.run(BACKWARD);
-  motor2.run(BACKWARD);
-  for (i=0; i<255; i++) {
-    motor1.setSpeed(i);  
-    motor2.setSpeed(i);  
-    delay(10);
- }
- 
-  for (i=255; i!=0; i--) {
-    motor1.setSpeed(i);  
-    motor2.setSpeed(i);  
-    delay(10);
- }
-  
+  if (Serial.available() > 0) {
+        // read the incoming byte:
+        received_char = Serial.read();
 
-  Serial.print("release \n");
-  motor1.run(RELEASE);
-  delay(1000);
+        #ifdef DEBUG
+        Serial.print("Got- ");
+        Serial.println(received_char, DEC);
+        #endif
+    }
+
+    switch (received_char) 
+    {
+      case 49:
+        Serial.print("Forward\n\r");
+        left.run(FORWARD);
+        right.run(FORWARD);
+        delay(delay_val); 
+        break;
+      case 50:
+        Serial.print("Reverse\n\r");
+        left.run(BACKWARD);
+        right.run(BACKWARD);
+        delay(delay_val);
+        break;
+      case 51:
+        Serial.print("Left\n\r");
+        left.run(BACKWARD);
+        right.run(FORWARD);
+        delay(delay_val);
+        break;
+      case 52:
+        Serial.print("Right\n\r");
+        left.run(FORWARD);
+        right.run(BACKWARD);
+        delay(delay_val);
+        break;
+      case 53:
+        left.run(RELEASE);
+        right.run(RELEASE);
+        delay(delay_val);
+      default:
+        left.run(RELEASE);
+        right.run(RELEASE);
+        delay(delay_val);
+        break;
+    }
+
+  received_char=53;
 }
