@@ -40,33 +40,46 @@ void loop() {
     switch (received_char) 
     {
       case 49:
+        #ifdef DEBUG
         Serial.print("Forward\n\r");
+        #endif
         left.run(FORWARD);
         right.run(FORWARD);
         delay(delay_val); 
+        Serial.write('f');
         break;
       case 50:
+        #ifdef DEBUG
         Serial.print("Reverse\n\r");
+        #endif
         left.run(BACKWARD);
         right.run(BACKWARD);
         delay(delay_val);
+        Serial.write('r');
         break;
       case 51:
+        #ifdef DEBUG
         Serial.print("Left\n\r");
+        #endif
         left.run(BACKWARD);
         right.run(FORWARD);
         delay(delay_val);
+        Serial.write('l');
         break;
       case 52:
+        #ifdef DEBUG
         Serial.print("Right\n\r");
+        #endif
         left.run(FORWARD);
         right.run(BACKWARD);
         delay(delay_val);
+        Serial.write('r');
         break;
       case 53:
         left.run(RELEASE);
         right.run(RELEASE);
         delay(delay_val);
+        Serial.write('s');
       default:
         left.run(RELEASE);
         right.run(RELEASE);
@@ -74,5 +87,5 @@ void loop() {
         break;
     }
 
-  received_char=53;
+  received_char=0;
 }
