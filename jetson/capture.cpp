@@ -28,6 +28,9 @@
 #include <opencv/cv.h>
 #include <opencv/cxcore.h>
 #include <opencv/highgui.h>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 //Macros
 #define USEC_PER_MSEC (1000)
@@ -82,6 +85,15 @@ int main(void)
 
 	int dev = 0;    
     capture = (CvCapture *)cvCreateCameraCapture(dev);
+    
+			if(!cvQueryFrame(capture))
+		{
+			cout<<"Video camera capture status: OK"<<endl;
+		}
+		else
+		{
+			cout<<"Video capture failed, please check the camera."<<endl;
+		}
     
 	struct timeval current_time_val;
     int i, rc, scope;
@@ -237,38 +249,38 @@ void *Sequencer(void *threadp)
     printf("Sequencer thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
 	
 	//loop to determine the total delay count and increment the counter
-//    do
-//    {
-//        delay_cnt=0; residual=0.0;
-//
-//        //gettimeofday(&current_time_val, (struct timezone *)0);
-//        //syslog(LOG_CRIT, "Sequencer thread prior to delay @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
-//        do
-//        {
-//            rc=nanosleep(&delay_time, &remaining_time);
-//
-//            if(rc == EINTR)
-//            {
-//                residual = remaining_time.tv_sec + ((double)remaining_time.tv_nsec / (double)NANOSEC_PER_SEC);
-//
-//                if(residual > 0.0) printf("residual=%lf, sec=%d, nsec=%d\n", residual, (int)remaining_time.tv_sec, (int)remaining_time.tv_nsec);
-//
-//                delay_cnt++;
-//            }
-//            else if(rc < 0)
-//            {
-//                perror("Sequencer nanosleep");
-//                exit(-1);
-//            }
-//
-//        } while((residual > 0.0));
-//
-//        seqCnt++;
-//        gettimeofday(&current_time_val, (struct timezone *)0);
-//        syslog(LOG_CRIT, "Sequencer cycle %llu @ sec=%d, msec=%d\n", seqCnt, (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
-//
-//
-//        if(delay_cnt > 1) printf("Sequencer looping delay %d\n", delay_cnt);
+    do
+    {
+        delay_cnt=0; residual=0.0;
+
+        //gettimeofday(&current_time_val, (struct timezone *)0);
+        //syslog(LOG_CRIT, "Sequencer thread prior to delay @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
+        do
+        {
+            rc=nanosleep(&delay_time, &remaining_time);
+
+            if(rc == EINTR)
+            {
+                residual = remaining_time.tv_sec + ((double)remaining_time.tv_nsec / (double)NANOSEC_PER_SEC);
+
+                if(residual > 0.0) printf("residual=%lf, sec=%d, nsec=%d\n", residual, (int)remaining_time.tv_sec, (int)remaining_time.tv_nsec);
+
+                delay_cnt++;
+            }
+            else if(rc < 0)
+            {
+                perror("Sequencer nanosleep");
+                exit(-1);
+            }
+
+        } while((residual > 0.0));
+
+        seqCnt++;
+        gettimeofday(&current_time_val, (struct timezone *)0);
+        syslog(LOG_CRIT, "Sequencer cycle %llu @ sec=%d, msec=%d\n", seqCnt, (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
+
+
+        if(delay_cnt > 1) printf("Sequencer looping delay %d\n", delay_cnt);
 //		
 //	namedWindow( timg_window_name, CV_WINDOW_AUTOSIZE );
 	
@@ -283,19 +295,19 @@ void *Sequencer(void *threadp)
     // Release each service at a sub-rate of the generic sequencer rate
 
         // Servcie_1 = RT_MAX-1	@ 3 Hz
-//        if((seqCnt % 10) == 0) 
+        if((seqCnt % 10) == 0) 
 			sem_post(&semS1);
 
         // Service_2 = RT_MAX-2	@ 1 Hz
-//        if((seqCnt % 30) == 0) 
-//			sem_post(&semS2);
-//
+        if((seqCnt % 30) == 0) 
+			sem_post(&semS2);
+
 //
 //        gettimeofday(&current_time_val, (struct timezone *)0);
 //        syslog(LOG_CRIT, "Sequencer release all sub-services @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
 //
 //    } while(!abortTest && (seqCnt < threadParams->sequencePeriods));
-//	} while(!abortTest);
+	} while(!abortTest);
 //    sem_post(&semS1); 
 	//sem_post(&semS2); 
     //abortS1=TRUE; abortS2=TRUE; 
@@ -322,21 +334,13 @@ void *Service_1(void *threadp)
         sem_wait(&semS1);
 		gettimeofday(&start_service, (struct timezone *)0);
     
-	int c=0;
+    int c=0;
         
 	while( c != 27)
 	{
-			if(!cvQueryFrame(capture))
-		{
-			cout<<"Video camera capture status: OK"<<endl;
-		}
-		else
-		{
-			cout<<"Video capture failed, please check the camera."<<endl;
-		}
 	
 	CvSize sz = cvGetSize(cvQueryFrame( capture));
-	cout << "Height & width of captured frame: " << sz.height <<" x " << sz.width;
+	cout << "Height & width of captured frame: " << sz.height <<" x " << sz.width<<endl;
 	src    = cvCreateImage( sz,8, 3 );
 	gray   = cvCreateImage( cvSize(270,270),8, 1 );
 		src = cvQueryFrame(capture);
@@ -426,22 +430,22 @@ void *Service_1(void *threadp)
 					char txt[40]="";
 					if(con==1)
 					{
-						char txt1[]="Hi , This is Udit";
+						char txt1[]="2";
 						strcat(txt,txt1);
 					}
 					else if(con==2)
 					{
-						char txt1[]="3 Musketeers";
+						char txt1[]="3";
 						strcat(txt,txt1);
 					}
 					else if(con==3)
 					{
-						char txt1[]="Fanatastic 4";
+						char txt1[]="4";
 						strcat(txt,txt1);
 					}
 					else if(con==4)
 					{
-						char txt1[]="It's 5";
+						char txt1[]="5";
 						strcat(txt,txt1);
 					}
 					else
@@ -464,19 +468,20 @@ void *Service_1(void *threadp)
 		}
 		cvReleaseMemStorage( &storage );
 		cvNamedWindow( "threshold",1);cvShowImage( "threshold",src);
-		c = cvWaitKey(100);
-	}
-	cvReleaseCapture( &capture);
-	cvDestroyAllWindows();
   
 
         gettimeofday(&current_time_val, (struct timezone *)0);
 	gettimeofday(&end_service, (struct timezone *)0);
         syslog(LOG_CRIT, "Frame Sampler release %llu @ sec=%d, msec=%d\n", S1Cnt, (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
 	printf("Frame Sampler thread execution time: sec=%d, usec=%d\n", (int)(end_service.tv_sec-start_service.tv_sec), (int)((end_service.tv_usec-start_service.tv_usec)));
-    cout << "Frame Sampler thread execution time:"<<(int)(end_service.tv_sec-start_service.tv_sec)<<"sec"<<(int)(end_service.tv_usec-start_service.tv_usec)<<" usec";
+    cout << "Frame Sampler thread execution time:"<<(int)(end_service.tv_sec-start_service.tv_sec)<<"sec"<<(int)(end_service.tv_usec-start_service.tv_usec)<<" usec"<<endl;
     //cout << "Height & width of captured frame: " << sz.height <<" x " << sz.width;
     sem_post(&semS2);
+    
+	c = cvWaitKey(100);
+	}
+	cvReleaseCapture( &capture);
+	cvDestroyAllWindows();
 	}
 	
 	
