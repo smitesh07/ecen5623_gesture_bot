@@ -325,6 +325,8 @@ void *Service_1(void *threadp)
     unsigned long long S1Cnt=0;
     threadParams_t *threadParams = (threadParams_t *)threadp;
 
+    struct timespec start_s1,end_s1;
+
     gettimeofday(&current_time_val, (struct timezone *)0);
     syslog(LOG_CRIT, "Frame Sampler thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
     printf("Frame Sampler thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
@@ -332,13 +334,14 @@ void *Service_1(void *threadp)
     while(1)
     {
         sem_wait(&semS1);
-		gettimeofday(&start_service, (struct timezone *)0);
+		
     
     int c=0;
         
 	while( c != 27)
 	{
-	
+        clock_gettime(CLOCK_REALTIME,&start_s1); //start_s1,end_s1
+        
 	CvSize sz = cvGetSize(cvQueryFrame( capture));
 	cout << "Height & width of captured frame: " << sz.height <<" x " << sz.width<<endl;
 	src    = cvCreateImage( sz,8, 3 );
@@ -469,12 +472,15 @@ void *Service_1(void *threadp)
 		cvReleaseMemStorage( &storage );
 		cvNamedWindow( "threshold",1);cvShowImage( "threshold",src);
   
-
-        gettimeofday(&current_time_val, (struct timezone *)0);
+        clock_gettime(CLOCK_REALTIME,&end_s1); 
+        //gettimeofday(&current_time_val, (struct timezone *)0);
 	gettimeofday(&end_service, (struct timezone *)0);
-        syslog(LOG_CRIT, "Frame Sampler release %llu @ sec=%d, msec=%d\n", S1Cnt, (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
-	printf("Frame Sampler thread execution time: sec=%d, usec=%d\n", (int)(end_service.tv_sec-start_service.tv_sec), (int)((end_service.tv_usec-start_service.tv_usec)));
-    cout << "Frame Sampler thread execution time:"<<(int)(end_service.tv_sec-start_service.tv_sec)<<"sec"<<(int)(end_service.tv_usec-start_service.tv_usec)<<" usec"<<endl;
+        syslog(LOG_CRIT, "Frame Sampler release %llu @ sec=%d, msec=%d\n", S1Cnt,
+         (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
+	//printf("Frame Sampler thread execution time: sec=%d, usec=%d\n", 
+        //(int)(end_service.tv_sec-start_service.tv_sec), (int)((end_service.tv_usec-start_service.tv_usec)));
+    cout << "Frame Sampler thread execution time: sec :"
+        <<end_tp.tv_sec-start_tp.tv_sec<<" nsec:"<<end_tp.tv_nsec-start_tp.tv_nsec<<endl;
     //cout << "Height & width of captured frame: " << sz.height <<" x " << sz.width;
     sem_post(&semS2);
     
