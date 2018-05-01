@@ -3,7 +3,7 @@ LIB_DIRS =
 CC=g++
 
 CDEFS=
-CFLAGS= -O0 -pg -g $(INCLUDE_DIRS) $(CDEFS)
+CFLAGS= -O0 -g $(INCLUDE_DIRS) $(CDEFS)
 LIBS= -lrt
 CPPLIBS= -L/usr/lib -lopencv_core -lopencv_flann -lopencv_video
 
@@ -24,7 +24,7 @@ distclean:
 	-rm -f *.o *.d
 
 capture: capture.o
-	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $@.o `pkg-config --libs opencv` $(CPPLIBS)
+	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $@.o `pkg-config --libs opencv` $(CPPLIBS) -std=c++11
 
 depend:
 
