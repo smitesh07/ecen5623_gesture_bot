@@ -28,6 +28,7 @@ int open_port(char* port_name)
 }
 
 
+/*
 int main()
 {
 	int port=open_port(ARDUINO_SERIAL);
@@ -46,3 +47,4 @@ int main()
 	printf("Port Closed \n");
 }
 
+*/

@@ -32,6 +32,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include "serial.h"
+
 //Macros
 #define USEC_PER_MSEC (1000)
 #define NANOSEC_PER_SEC (1000000000)
@@ -208,7 +210,9 @@ int main(void)
     else
         printf("pthread_create successful for service 2\n");
 
-
+    
+    sem_post(&semS1);
+    /*
     // Create Sequencer thread, which like a cyclic executive, is highest prio
     printf("Start sequencer\n");
     threadParams[0].sequencePeriods=900;
@@ -223,6 +227,8 @@ int main(void)
     else
         printf("pthread_create successful for sequeencer service 0\n");
 
+    */
+     
 
    for(i=0;i<NUM_THREADS;i++)
        pthread_join(threads[i], NULL);
@@ -248,6 +254,8 @@ void *Sequencer(void *threadp)
     syslog(LOG_CRIT, "Sequencer thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
     printf("Sequencer thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
 	
+    
+   
 	//loop to determine the total delay count and increment the counter
     do
     {
@@ -294,19 +302,23 @@ void *Sequencer(void *threadp)
     
     // Release each service at a sub-rate of the generic sequencer rate
 
+       
         // Servcie_1 = RT_MAX-1	@ 3 Hz
+        /*
         if((seqCnt % 10) == 0) 
 			sem_post(&semS1);
 
         // Service_2 = RT_MAX-2	@ 1 Hz
-        if((seqCnt % 30) == 0) 
+        if((seqCnt % 10) == 0) 
 			sem_post(&semS2);
-
+*/
 //
 //        gettimeofday(&current_time_val, (struct timezone *)0);
 //        syslog(LOG_CRIT, "Sequencer release all sub-services @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
 //
 //    } while(!abortTest && (seqCnt < threadParams->sequencePeriods));
+
+        cout<<"Inside Sequencer"<<endl;
 	} while(!abortTest);
 //    sem_post(&semS1); 
 	//sem_post(&semS2); 
@@ -333,14 +345,18 @@ void *Service_1(void *threadp)
 
     while(1)
     {
-        sem_wait(&semS1);
+        
 		
     
     int c=0;
         
 	while( c != 27)
 	{
+        sem_wait(&semS1);
+
         clock_gettime(CLOCK_REALTIME,&start_s1); //start_s1,end_s1
+
+        //cout<<"Camera starting"<<endl;
         
 	CvSize sz = cvGetSize(cvQueryFrame( capture));
 	cout << "Height & width of captured frame: " << sz.height <<" x " << sz.width<<endl;
@@ -453,7 +469,7 @@ void *Service_1(void *threadp)
 					}
 					else
 					{
-						char txt1[]="Jarvis is busy :P"; // Jarvis can't recognise you
+						char txt1[]="Busy :P"; // Jarvis can't recognise you
 						strcat(txt,txt1);
 					}
 					cvNamedWindow( "contour",1);cvShowImage( "contour",src);
@@ -479,10 +495,14 @@ void *Service_1(void *threadp)
          (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
 	//printf("Frame Sampler thread execution time: sec=%d, usec=%d\n", 
         //(int)(end_service.tv_sec-start_service.tv_sec), (int)((end_service.tv_usec-start_service.tv_usec)));
-    cout << "Frame Sampler thread execution time: sec :"
-        <<end_tp.tv_sec-start_tp.tv_sec<<" nsec:"<<end_tp.tv_nsec-start_tp.tv_nsec<<endl;
+    cout << "Camera Service execution time: sec :"
+        <<(end_s1.tv_sec-start_s1.tv_sec)<<" nsec:"<<(end_s1.tv_nsec-start_s1.tv_nsec)<<endl;
     //cout << "Height & width of captured frame: " << sz.height <<" x " << sz.width;
+    
+    //cout<<"Camera ending"<<endl;
     sem_post(&semS2);
+
+    
     
 	c = cvWaitKey(100);
 	}
@@ -500,23 +520,48 @@ void *Service_2(void *threadp)
     struct timeval current_time_val,start_service,end_service;
     double current_time;
     unsigned long long S2Cnt=0;
+
+    struct timespec start_s2,end_s2;
+
+    char sent=49,received;
+
     threadParams_t *threadParams = (threadParams_t *)threadp;
 
-    gettimeofday(&current_time_val, (struct timezone *)0);
+    int port=open_port(ARDUINO_SERIAL);
+
+    if(port<0) 
+        {
+            cout<<"Motor Not found !!!!"<<endl;
+            exit(0);
+        }
+    
     syslog(LOG_CRIT, "Time-stamp with Image Analysis thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
-    printf("Time-stamp with Image Analysis thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
+    //printf("Time-stamp with Image Analysis thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
 
     while(1)
     {
         sem_wait(&semS2);
-	gettimeofday(&start_service, (struct timezone *)0);
+	    clock_gettime(CLOCK_REALTIME,&start_s2); 
         S2Cnt++;
+        
+        if(sent>53)  sent=49;
+         
 
-        gettimeofday(&current_time_val, (struct timezone *)0);
-	gettimeofday(&end_service, (struct timezone *)0);
-        syslog(LOG_CRIT, "Time-stamp with Image Analysis release %llu @ sec=%d, msec=%d\n", S2Cnt, (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
-	printf("Time-stamp with Image Analysis thread execution time: sec=%d, usec=%d\n", (int)(end_service.tv_sec-start_service.tv_sec),(int)((end_service.tv_usec-start_service.tv_usec)));
-    	sem_post(&semS1);
+        write(port,&sent,1);
+        
+        read(port,&received,1); 
+        cout<<"Sent : "<<sent<<" Motor Ack : "<<received<<endl;
+        sent++;
+
+        clock_gettime(CLOCK_REALTIME,&end_s2); 
+        syslog(LOG_CRIT, "Time-stamp with Image Analysis release %llu @ sec=%d, msec=%d\n", 
+            S2Cnt, (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
+	cout << "Motor thread execution time: sec :"
+        <<(end_s2.tv_sec-start_s2.tv_sec)<<" nsec:"<<(end_s2.tv_nsec-start_s2.tv_nsec)<<endl;
+    	
+        
+        sem_post(&semS1);
+        
 	}
 
     //pthread_exit((void *)0);

@@ -8,11 +8,12 @@ LIBS= -lrt
 CPPLIBS= -L/usr/lib -lopencv_core -lopencv_flann -lopencv_video
 
 HFILES= 
-CFILES= 
+CFILES=serial.c
 CPPFILES= capture.cpp
 
 SRCS= ${HFILES} ${CFILES}
 CPPOBJS= ${CPPFILES:.cpp=.o}
+COBJS= ${CFILES:.c=.o}
 
 all:	capture 
 
@@ -23,8 +24,8 @@ clean:
 distclean:
 	-rm -f *.o *.d
 
-capture: capture.o
-	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $@.o `pkg-config --libs opencv` $(CPPLIBS) -std=c++11
+capture: serial.o capture.o
+	$(CC) $(LDFLAGS) $(CFLAGS) $(COBJS) -o $@ $@.o `pkg-config --libs opencv` $(CPPLIBS) -std=c++11
 
 depend:
 
