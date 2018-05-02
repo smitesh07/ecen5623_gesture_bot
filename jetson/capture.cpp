@@ -529,12 +529,12 @@ void *Service_2(void *threadp)
 
     int port=open_port(ARDUINO_SERIAL);
 
-    if(port<0) 
+/*    if(port<0) 
         {
             cout<<"Motor Not found !!!!"<<endl;
             exit(0);
         }
-    
+*/    
     syslog(LOG_CRIT, "Time-stamp with Image Analysis thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
     //printf("Time-stamp with Image Analysis thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
 
