@@ -549,8 +549,8 @@ void *Service_2(void *threadp)
 
         write(port,&sent,1);
         
-        read(port,&received,1); 
-        cout<<"Sent : "<<sent<<" Motor Ack : "<<received<<endl;
+        //read(port,&received,1); 
+        //cout<<"Sent : "<<sent<<" Motor Ack : "<<received<<endl;
         sent++;
 
         clock_gettime(CLOCK_REALTIME,&end_s2); 
