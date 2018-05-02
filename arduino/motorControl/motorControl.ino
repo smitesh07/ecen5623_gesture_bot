@@ -4,7 +4,7 @@
 
 #include <AFMotor.h>
 
-#define delay_val 100
+#define delay_val 200
 
 AF_DCMotor left(4);
 AF_DCMotor right(3);
@@ -13,7 +13,7 @@ void setup() {
   
   
   Serial.begin(115200);           // set up Serial library at 9600 bps
-  Serial.println("Startup \n");
+  //Serial.println("Startup \n");
 
   // turn on motor
   left.setSpeed(255);
@@ -55,7 +55,7 @@ void loop() {
         left.run(BACKWARD);
         right.run(BACKWARD);
         delay(delay_val);
-        Serial.write('r');
+        Serial.write('b');
         break;
       case 51:
         #ifdef DEBUG

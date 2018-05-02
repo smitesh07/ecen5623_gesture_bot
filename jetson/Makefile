@@ -5,7 +5,7 @@ CC=g++
 CDEFS=
 CFLAGS= -O0 -g $(INCLUDE_DIRS) $(CDEFS)
 LIBS= -lrt
-CPPLIBS= -L/usr/lib -lopencv_core -lopencv_flann -lopencv_video
+CPPLIBS= -L/usr/lib -lopencv_core -lopencv_flann -lopencv_video 
 
 HFILES= 
 CFILES=serial.c
@@ -16,7 +16,8 @@ CPPOBJS= ${CPPFILES:.cpp=.o}
 COBJS= ${CFILES:.c=.o}
 
 all:	capture 
-
+	@echo "creating capture"
+	
 clean:
 	-rm -f *.o *.d
 	-rm -f capture
@@ -29,8 +30,8 @@ capture: serial.o capture.o
 
 depend:
 
-.c.o:
+%.c:%.o
 	$(CC) $(CFLAGS) -c $<
 
-.cpp.o:
+%.cpp:%.o
 	$(CC) $(CFLAGS) -c $<
