@@ -512,19 +512,26 @@ void *Service_2(void *threadp)
 
     struct timespec start_s2,end_s2;
 
+<<<<<<< f78ab8675c55eede8f52df47408a831a49e25990
     //char sent=49;
+=======
+>>>>>>> Final Code
 	char received;
 
     threadParams_t *threadParams = (threadParams_t *)threadp;
 
     int port=open_port(ARDUINO_SERIAL);			//open serial port
 
-/*    if(port<0) 
+    if(port<0) 
         {
             cout<<"Motor Not found !!!!"<<endl;
             exit(0);
         }
+<<<<<<< f78ab8675c55eede8f52df47408a831a49e25990
 */    
+=======
+    
+>>>>>>> Final Code
     syslog(LOG_CRIT, "Time-stamp with Motor Service thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
     //printf("Time-stamp with Motor Service thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
 
@@ -533,6 +540,7 @@ void *Service_2(void *threadp)
         sem_wait(&semS2);
 	    clock_gettime(CLOCK_REALTIME,&start_s2); 
         S2Cnt++;
+<<<<<<< f78ab8675c55eede8f52df47408a831a49e25990
         
         //if(sent>53)  sent=49;
          
@@ -542,6 +550,13 @@ void *Service_2(void *threadp)
         //read(port,&received,1); 
         //cout<<"Sent : "<<sent<<" Motor Ack : "<<received<<endl;
         //sent++;
+=======
+         
+        write(port,&serial_sig,1);			//serial write
+        
+        read(port,&received,1); 
+        cout<<"Sent : "<<serial_sig<<" Motor Ack : "<<received<<endl;
+>>>>>>> Final Code
 
         clock_gettime(CLOCK_REALTIME,&end_s2); 
         cout << "Motor thread execution time: sec :"
