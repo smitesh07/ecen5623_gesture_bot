@@ -295,7 +295,7 @@ void *Sequencer(void *threadp)
        
         // Servcie_1 = RT_MAX-1	@ 30 Hz
         
-        if(seqCnt == 1) 
+        if(seqCnt%4==0 ) 
 			sem_post(&semS1);
 /*
         // Service_2 = RT_MAX-2	@ 1 Hz
@@ -440,31 +440,31 @@ void *Service_1(void *threadp)
 					if(con==1)
 					{	
 						serial_sig = '1';
-						char txt1[]="2";
+						char txt1[]="2 Forward";
 						strcat(txt,txt1);
 					}
 					else if(con==2)
 					{
 						serial_sig = '2';
-						char txt1[]="3";
+						char txt1[]="3 Backward";
 						strcat(txt,txt1);
 					}
 					else if(con==3)
 					{
 						serial_sig = '3';
-						char txt1[]="4";
+						char txt1[]="4 Left";
 						strcat(txt,txt1);
 					}
 					else if(con==4)
 					{
 						serial_sig = '4';
-						char txt1[]="5";
+						char txt1[]="5 Right";
 						strcat(txt,txt1);
 					}
 					else
 					{
 						serial_sig = '5';
-						char txt1[]="Busy"; 
+						char txt1[]="Stop"; 
 						strcat(txt,txt1);
 					}
 					cvNamedWindow( "contour",1);cvShowImage( "contour",src);
@@ -540,19 +540,14 @@ void *Service_2(void *threadp)
 
         write(port,&serial_sig,1);			//serial write
         
-        //read(port,&received,1); 
-        //cout<<"Sent : "<<sent<<" Motor Ack : "<<received<<endl;
-        //sent++;
-         
-        write(port,&serial_sig,1);			//serial write
-        
-        read(port,&received,1); 
-        cout<<"Sent : "<<serial_sig<<" Motor Ack : "<<received<<endl;
+       // read(port,&received,1); 
+        cout<<"Sent : "<<serial_sig<<endl;
+	//<<" Motor Ack : "<<received<<endl;
 
         clock_gettime(CLOCK_REALTIME,&end_s2); 
         cout << "Motor thread execution time: sec :"
         <<(end_s2.tv_sec-start_s2.tv_sec)<<" nsec:"<<(end_s2.tv_nsec-start_s2.tv_nsec)<<endl;
-    	sem_post(&semS1);
+    	//sem_post(&semS1);
         
 	}
 

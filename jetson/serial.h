@@ -22,4 +22,4 @@
 #define UART_TEST "/dev/ttyUSB0"
 #define ARDUINO_SERIAL "/dev/ttyACM0"
 
-int open_port(char* port_name);
+int open_port(const char* port_name);

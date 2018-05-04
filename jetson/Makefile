@@ -16,7 +16,6 @@ CPPOBJS= ${CPPFILES:.cpp=.o}
 COBJS= ${CFILES:.c=.o}
 
 all:	capture 
-	@echo "creating capture"
 	
 clean:
 	-rm -f *.o *.d
@@ -25,13 +24,14 @@ clean:
 distclean:
 	-rm -f *.o *.d
 
-capture: serial.o capture.o
+capture: serial.o capture.o 
 	$(CC) $(LDFLAGS) $(CFLAGS) $(COBJS) -o $@ $@.o `pkg-config --libs opencv` $(CPPLIBS) -std=c++11
 
 depend:
 
-%.c:%.o
-	$(CC) $(CFLAGS) -c $<
 
-%.cpp:%.o
-	$(CC) $(CFLAGS) -c $<
+#%.c:%.o
+#	$(CC) $(CFLAGS) -c $<
+
+#%.cpp:%.o
+#	$(CC) $(CFLAGS) -c $<

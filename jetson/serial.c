@@ -1,7 +1,7 @@
 #include "serial.h"
 
 
-int open_port(char* port_name)
+int open_port(const char* port_name)
 {
 	struct termios tio;
   	int tty_fd; /* File descriptor for the port */
