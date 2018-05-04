@@ -5,6 +5,8 @@
 *@date 
 */
 
+//#define _GNU_SOURCE
+
 // Standard Libraries
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,14 +32,12 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-//Personal Libraries
 #include "serial.h"
 
 //Macros
 #define USEC_PER_MSEC (1000)
 #define NANOSEC_PER_SEC (1000000000)
 #define NUM_CPU_CORES (1)
-
 //#define TRUE (1)
 //#define FALSE (0)
 
@@ -51,9 +51,9 @@ using namespace std;
 
 int abortTest=FALSE;
 int abortS1=FALSE, abortS2=FALSE;
-
+//abortS3=FALSE, abortS4=FALSE, abortS5=FALSE, abortS6=FALSE, abortS7=FALSE;
 sem_t semS1, semS2;
-
+// semS3, semS4, semS5, semS6, semS7;
 struct timeval start_time_val;
 
 //structure for threads
@@ -75,11 +75,9 @@ void print_scheduler(void);
 // Transform display window
 char timg_window_name[] = "Hand Gesture Detecion";
 
-//Global variables
 CvCapture* capture;
 IplImage* src;
 IplImage* gray;
-char serial_sig;
 
 /***************************************************************************************************************************/
 
@@ -88,16 +86,16 @@ int main(void)
 {	
 
 	int dev = 0;    
-    capture = (CvCapture *)cvCreateCameraCapture(dev);			//opens the camera
+    capture = (CvCapture *)cvCreateCameraCapture(dev);
     
-	if(!cvQueryFrame(capture))
-	{
-		cout<<"Video camera capture status: OK"<<endl;
-	}
-	else
-	{
-		cout<<"Video capture failed, please check the camera."<<endl;
-	}
+			if(!cvQueryFrame(capture))
+		{
+			cout<<"Video camera capture status: OK"<<endl;
+		}
+		else
+		{
+			cout<<"Video capture failed, please check the camera."<<endl;
+		}
     
 	struct timeval current_time_val;
     int i, rc, scope;
@@ -120,15 +118,15 @@ int main(void)
     gettimeofday(&current_time_val, (struct timezone *)0);
     syslog(LOG_CRIT, "Sequencer @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
 
-   	//printf("System has %d processors configured and %d available.\n", get_nprocs_conf(), get_nprocs());
+   //printf("System has %d processors configured and %d available.\n", get_nprocs_conf(), get_nprocs());
 
-   	CPU_ZERO(&allcpuset);
+   CPU_ZERO(&allcpuset);
 
-   	//setting cpu affinity
-   	for(i=0; i < NUM_CPU_CORES; i++)
+   //setting cpu affinity
+   for(i=0; i < NUM_CPU_CORES; i++)
        CPU_SET(i, &allcpuset);
 
-   	printf("Using CPUS=%d from total available.\n", CPU_COUNT(&allcpuset));
+   printf("Using CPUS=%d from total available.\n", CPU_COUNT(&allcpuset));
 
 
     // initialize the sequencer semaphores
@@ -186,7 +184,7 @@ int main(void)
     // Create Service threads which will block awaiting release for:
     //
 
-    // Servcie_1 (Hand Detection and Gesture Control) = RT_MAX-1	@ 30 Hz  (30fps)
+    // Servcie_1 = RT_MAX-1	@ 3 Hz
     //
     rt_param[1].sched_priority=rt_max_prio-1;
     pthread_attr_setschedparam(&rt_sched_attr[1], &rt_param[1]);
@@ -202,7 +200,7 @@ int main(void)
         printf("pthread_create successful for service 1\n");
 
 
-    // Service_2 (Motor Control) = RT_MAX-2	
+    // Service_2 = RT_MAX-2	@ 1 Hz
     //
     rt_param[2].sched_priority=rt_max_prio-2;
     pthread_attr_setschedparam(&rt_sched_attr[2], &rt_param[2]);
@@ -213,10 +211,11 @@ int main(void)
         printf("pthread_create successful for service 2\n");
 
     
-    //sem_post(&semS1);
+    sem_post(&semS1);
+    /*
     // Create Sequencer thread, which like a cyclic executive, is highest prio
     printf("Start sequencer\n");
-    //threadParams[0].sequencePeriods=900;
+    threadParams[0].sequencePeriods=900;
 
     // Sequencer = RT_MAX	@ 30 Hz
     //
@@ -228,7 +227,9 @@ int main(void)
     else
         printf("pthread_create successful for sequeencer service 0\n");
 
-    
+    */
+     
+
    for(i=0;i<NUM_THREADS;i++)
        pthread_join(threads[i], NULL);
 
@@ -256,7 +257,7 @@ void *Sequencer(void *threadp)
     
    
 	//loop to determine the total delay count and increment the counter
-     do
+    do
     {
         delay_cnt=0; residual=0.0;
 
@@ -288,31 +289,43 @@ void *Sequencer(void *threadp)
 
 
         if(delay_cnt > 1) printf("Sequencer looping delay %d\n", delay_cnt);
-   
+//		
+//	namedWindow( timg_window_name, CV_WINDOW_AUTOSIZE );
+	
+//	int dev = 0;    
+//    capture = (CvCapture *)cvCreateCameraCapture(dev);
+    	//cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, HRES);
+    	//cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, VRES);
+	//cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, 480);
+   	//cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, 320);    
+    
     
     // Release each service at a sub-rate of the generic sequencer rate
 
        
-        // Servcie_1 = RT_MAX-1	@ 30 Hz
-        
-        if(seqCnt == 1) 
+        // Servcie_1 = RT_MAX-1	@ 3 Hz
+        /*
+        if((seqCnt % 10) == 0) 
 			sem_post(&semS1);
-/*
+
         // Service_2 = RT_MAX-2	@ 1 Hz
         if((seqCnt % 10) == 0) 
 			sem_post(&semS2);
 */
-
+//
 //        gettimeofday(&current_time_val, (struct timezone *)0);
 //        syslog(LOG_CRIT, "Sequencer release all sub-services @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
 //
 //    } while(!abortTest && (seqCnt < threadParams->sequencePeriods));
 
-        //cout<<"Inside Sequencer"<<endl;
+        cout<<"Inside Sequencer"<<endl;
 	} while(!abortTest);
+//    sem_post(&semS1); 
+	//sem_post(&semS2); 
+    //abortS1=TRUE; abortS2=TRUE; 
 
 
-    pthread_exit((void *)0);
+    //pthread_exit((void *)0);
 }
 
 
@@ -327,30 +340,35 @@ void *Service_1(void *threadp)
     struct timespec start_s1,end_s1;
 
     gettimeofday(&current_time_val, (struct timezone *)0);
-    
+    syslog(LOG_CRIT, "Frame Sampler thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
+    printf("Frame Sampler thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
+
     while(1)
     {
         
-		int c=0;
+		
+    
+    int c=0;
         
-		while( c != 27)
-		{
+	while( c != 27)
+	{
         sem_wait(&semS1);
 
         clock_gettime(CLOCK_REALTIME,&start_s1); //start_s1,end_s1
 
         //cout<<"Camera starting"<<endl;
         
-		CvSize sz = cvGetSize(cvQueryFrame( capture));
-		cout << "Height & width of captured frame: " << sz.height <<" x " << sz.width<<endl;
-		src    = cvCreateImage( sz,8, 3 );
-		gray   = cvCreateImage( cvSize(270,270),8, 1 );
+	CvSize sz = cvGetSize(cvQueryFrame( capture));
+	cout << "Height & width of captured frame: " << sz.height <<" x " << sz.width<<endl;
+	src    = cvCreateImage( sz,8, 3 );
+	gray   = cvCreateImage( cvSize(270,270),8, 1 );
 		src = cvQueryFrame(capture);
-		cvSetImageROI(src, cvRect(340,100,270,270));		//set ROI
-		cvCvtColor(src,gray,CV_BGR2GRAY);					//convert to grayscale
-		cvSmooth(gray,gray,CV_BLUR,(12,12),0);				//smoothing uses linear convolution over it and blurs the image
-		cvNamedWindow( "Blur",1);cvShowImage( "Blur",gray);   // blur-not-clear
-		cvThreshold(gray,gray,0,255,(CV_THRESH_BINARY_INV+CV_THRESH_OTSU));			//thresolding converts the image into black and white
+		cvSetImageROI(src, cvRect(340,100,270,270));
+		cvNamedWindow( "ROI",1);cvShowImage( "ROI",src);   // blur-not-clear
+		cvCvtColor(src,gray,CV_BGR2GRAY);
+		//cvSmooth(gray,gray,CV_BLUR,(12,12),0);
+		//cvNamedWindow( "Blur",1);cvShowImage( "Blur",gray);   // blur-not-clear
+		cvThreshold(gray,gray,0,255,(CV_THRESH_BINARY_INV+CV_THRESH_OTSU));
 		cvNamedWindow( "Threshold",1);cvShowImage( "Threshold",gray);  // black-white
 		CvMemStorage* storage = cvCreateMemStorage();
 		CvSeq* first_contour = NULL;
@@ -359,10 +377,6 @@ void *Service_1(void *threadp)
 		double area,max_area=0.0;
 		CvSeq* ptr=0;
 		//int maxn=0,n=0;
-		
-		// loop to get the contour with maximum area and ignore the frames if maximum area of contour
-		// is less than 1000
-		
 		if(cn>0)
 		{
 			for(ptr=first_contour;ptr!=NULL;ptr=ptr->h_next)
@@ -391,9 +405,9 @@ void *Service_1(void *threadp)
 					pt0.y = p->y;
 					cvSeqPush( ptseq, &pt0 );
 				}
-				hull = cvConvexHull2( ptseq, 0, CV_CLOCKWISE, 0 );   // find convex hull of the sequence from the contours
+				hull = cvConvexHull2( ptseq, 0, CV_CLOCKWISE, 0 );
 				int hullcount = hull->total;
-				defects= cvConvexityDefects(ptseq,hull,storage2  );  			//find the convex defects
+				defects= cvConvexityDefects(ptseq,hull,storage2  );
 				// pt0 = **CV_GET_SEQ_ELEM( CvPoint*, hull, hullcount - 1 );
 				// printf("** : %d :**",hullcount);
 				CvConvexityDefect* defectArray;
@@ -433,38 +447,30 @@ void *Service_1(void *threadp)
 						}
 					}
 					// cout<<con<<"\n";
-					
-					//based on number of fingers detected generate the serial signal to be sent
-					
 					char txt[40]="";
 					if(con==1)
-					{	
-						serial_sig = '1';
+					{
 						char txt1[]="2";
 						strcat(txt,txt1);
 					}
 					else if(con==2)
 					{
-						serial_sig = '2';
 						char txt1[]="3";
 						strcat(txt,txt1);
 					}
 					else if(con==3)
 					{
-						serial_sig = '3';
 						char txt1[]="4";
 						strcat(txt,txt1);
 					}
 					else if(con==4)
 					{
-						serial_sig = '4';
 						char txt1[]="5";
 						strcat(txt,txt1);
 					}
 					else
 					{
-						serial_sig = '5';
-						char txt1[]="Busy"; 
+						char txt1[]="Busy :P"; // Jarvis can't recognise you
 						strcat(txt,txt1);
 					}
 					cvNamedWindow( "contour",1);cvShowImage( "contour",src);
@@ -485,22 +491,28 @@ void *Service_1(void *threadp)
   
         clock_gettime(CLOCK_REALTIME,&end_s1); 
         //gettimeofday(&current_time_val, (struct timezone *)0);
-		gettimeofday(&end_service, (struct timezone *)0);
-        cout << "Camera Service execution time: sec :"
+	gettimeofday(&end_service, (struct timezone *)0);
+        syslog(LOG_CRIT, "Frame Sampler release %llu @ sec=%d, msec=%d\n", S1Cnt,
+         (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
+	//printf("Frame Sampler thread execution time: sec=%d, usec=%d\n", 
+        //(int)(end_service.tv_sec-start_service.tv_sec), (int)((end_service.tv_usec-start_service.tv_usec)));
+    cout << "Camera Service execution time: sec :"
         <<(end_s1.tv_sec-start_s1.tv_sec)<<" nsec:"<<(end_s1.tv_nsec-start_s1.tv_nsec)<<endl;
-    	
+    //cout << "Height & width of captured frame: " << sz.height <<" x " << sz.width;
     
-    	//cout<<"Camera ending"<<endl;
-    	sem_post(&semS2);
+    //cout<<"Camera ending"<<endl;
+    sem_post(&semS2);
 
-    c = cvWaitKey(100);
+    
+    
+	c = cvWaitKey(100);
 	}
 	cvReleaseCapture( &capture);
 	cvDestroyAllWindows();
 	}
 	
 	
-    pthread_exit((void *)0);
+    //pthread_exit((void *)0);
 }
 
 
@@ -512,12 +524,11 @@ void *Service_2(void *threadp)
 
     struct timespec start_s2,end_s2;
 
-    //char sent=49;
-	char received;
+    char sent=49,received;
 
     threadParams_t *threadParams = (threadParams_t *)threadp;
 
-    int port=open_port(ARDUINO_SERIAL);			//open serial port
+    int port=open_port(ARDUINO_SERIAL);
 
 /*    if(port<0) 
         {
@@ -525,8 +536,8 @@ void *Service_2(void *threadp)
             exit(0);
         }
 */    
-    syslog(LOG_CRIT, "Time-stamp with Motor Service thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
-    //printf("Time-stamp with Motor Service thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
+    syslog(LOG_CRIT, "Time-stamp with Image Analysis thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
+    //printf("Time-stamp with Image Analysis thread @ sec=%d, msec=%d\n", (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
 
     while(1)
     {
@@ -534,23 +545,27 @@ void *Service_2(void *threadp)
 	    clock_gettime(CLOCK_REALTIME,&start_s2); 
         S2Cnt++;
         
-        //if(sent>53)  sent=49;
+        if(sent>53)  sent=49;
          
 
-        write(port,&serial_sig,1);			//serial write
+        write(port,&sent,1);
         
         //read(port,&received,1); 
         //cout<<"Sent : "<<sent<<" Motor Ack : "<<received<<endl;
-        //sent++;
+        sent++;
 
         clock_gettime(CLOCK_REALTIME,&end_s2); 
-        cout << "Motor thread execution time: sec :"
+        syslog(LOG_CRIT, "Time-stamp with Image Analysis release %llu @ sec=%d, msec=%d\n", 
+            S2Cnt, (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
+	cout << "Motor thread execution time: sec :"
         <<(end_s2.tv_sec-start_s2.tv_sec)<<" nsec:"<<(end_s2.tv_nsec-start_s2.tv_nsec)<<endl;
-    	sem_post(&semS1);
+    	
+        
+        sem_post(&semS1);
         
 	}
 
-    pthread_exit((void *)0);
+    //pthread_exit((void *)0);
 }
 
 
@@ -587,3 +602,9 @@ void print_scheduler(void)
 }
 
 
+/**************************************************************************************************************************/
+
+//int main()
+//{
+//  
+//};
