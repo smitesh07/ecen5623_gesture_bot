@@ -23,7 +23,11 @@ The entire system was build using prior experience with Arduino, OpenCV referenc
 
 # References
 
-Hand Detection and Gesture Recognition
+### OpenCV installation on NVIDIA Jetson TK1
+
+• https://elinux.org/Jetson/Installing_OpenCV
+
+### Hand Detection and Gesture Recognition
 
 • https://s-ln.in/2013/04/18/hand-tracking-and-gesture-detection-opencv/
 
@@ -37,20 +41,16 @@ Hand Detection and Gesture Recognition
 
 • http://opencvexamples.blogspot.com/2013/10/convex-hull.html
 
-Threading and Cyclic Executive
+### Threading and Cyclic Executive
 
 • http://mercury.pr.erau.edu/~siewerts/cec450/code/sequencer_generic/
 
-Completion and Scheduling Point Tests
+### Completion and Scheduling Point Tests
 
 • http://mercury.pr.erau.edu/~siewerts/cec450/code/Feasibility/feasibility_tests.c
 
-Real-Time Concepts and Linux
+### Real-Time Concepts and Linux
 
 • Real Time Embedded Components and Systems with Linux and RTOS, By Sam Siewert and John Pratt
 
 • https://linux.die.net/man/ - Linux Man Pages
-
-OpenCV installation on NVIDIA Jetson TK1
-
-• https://elinux.org/Jetson/Installing_OpenCV
