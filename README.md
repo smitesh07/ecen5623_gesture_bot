@@ -1,6 +1,8 @@
 # Final project for ECEN5623 Real time embedded systems
+# Project Name : Hand Gesture Controlled Robot
 ## Authors - Smitesh Modak and Aakash Kumar
 
+![Alt text](./Robot.png?raw=true "Hand Gesture Controlled Robot")
 
 # Description
 The project aims at building a Real-Time Embedded design which comprises of more than two services functioning and obeying the definition of Real-Time Embedded System i.e. being deterministic as well as functionally correct.
