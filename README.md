@@ -1,4 +1,4 @@
-# Final project for ECEN5623 Real time embedded systems
+# Final project for ECEN 5623 Real Time Embedded Systems
 # Project Name : Hand Gesture Controlled Robot
 ## Authors - Smitesh Modak and Aakash Kumar
 
